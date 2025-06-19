@@ -1,0 +1,20 @@
+Variables:
+NEUROSAN_CHAT_FILTER=MINIMAL
+NEUROSAN_HOST=svc-4139-api-neurosanserver
+NEUROSAN_PORT="30012"
+
+Functionality Specific Variables:
+APPLICATION_TRACING_ENABLED="true"
+AZURE_TABLE_STORAGE_CONNECTION_STRING=https://ctsinaznpdpbsa01.table.core.windows.net
+AZURE_TABLE_STORAGE_TABLE_NAME_FOR_LOG=OnecAssistant4139LogsSitEnv
+DEPLOYMENT_ENVIRONMENT=SIT
+ExcludedLogRecordNames=azure.core.pipeline.policies.http_logging_policy,azure.identity._credentials.environment,azure.identity._credentials.chained,azure.identity._credentials.managed_identity
+IsChatContextEnabled="false"
+NEUROSAN_AGENT_NAME=OneCAssistant
+REDIS_HOST_NAME=CTSINAZCHNUATRDCACH02.redis.cache.windows.net
+REDIS_LOGICAL_DB="2"
+REDIS_PORT="6380"
+REDIS_TTL="3600"
+
+Functionality Specific Secret Variables:
+SIT-4139-API-NeurosanApi-REDIS-PASSWORD

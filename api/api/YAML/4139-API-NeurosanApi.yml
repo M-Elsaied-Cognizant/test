@@ -1,0 +1,82 @@
+parameters:
+  - name: deployenvironmentname
+    default: DEVINT
+  - name: DCountenv
+    default: DEV
+  - name: BuildContext
+    default: Guest
+  - name: DockerFileName
+    default: Guest
+  - name: checkoutreponame
+    default: Reponame
+  - name: ValidationType
+    default: CAST
+  - name: DockerFilePath
+    default: Guest
+  - name: DockerFolderPath
+    default: Guest
+  - name: deployenvironmentportfolio
+    default: BC
+variables:
+- group: AKSDeployment-SVG
+- group: 4139-AKSDeploymentFiles-VG
+- group: AKSDeployment-DR-SVG 
+- name: envname
+  value: DEV
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release') }}:
+  - name: envname
+    value: SIT
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/develop') }}:
+  - name: envname
+    value: DEV
+- name: devKeyVaultSecret
+  value: '--from-literal=REDIS-PASSWORD="$(DEV-4139-API-NeurosanApi-REDIS-PASSWORD)"'
+- name: sitKeyVaultSecret
+  value: '--from-literal=REDIS-PASSWORD="$(SIT-4139-API-NeurosanApi-REDIS-PASSWORD)"'
+- name: ptKeyVaultSecret
+  value: '--from-literal=REDIS-PASSWORD="$(PT-4139-API-NeurosanApi-REDIS-PASSWORD)"'
+- name: uatKeyVaultSecret
+  value: '--from-literal=REDIS-PASSWORD="$(UAT-4139-API-NeurosanApi-REDIS-PASSWORD)"'
+- name: prodKeyVaultSecret
+  value: '--from-literal=REDIS-PASSWORD="$(PROD-4139-API-NeurosanApi-REDIS-PASSWORD)"'
+- name: drKeyVaultSecret
+  value: '--from-literal=REDIS-PASSWORD="$(DR-4139-API-NeurosanApi-REDIS-PASSWORD)"'
+pr: none
+name: $(envname)-$(date:yyyyMMdd)$(rev:.r)
+resources:
+  repositories:
+    - repository: templates
+      type: githubenterprise
+      name: Digital-Platform-IT-Build/OneC_2932_CoreTemplate
+      endpoint: GHA-Digital Platform IT Build-sc-4139-IT Enterprise BOT
+    - repository: Reponame
+      type: githubenterprise
+      ref: $(Build.SourceBranchName)
+      name: Digital-Platform-IT-Build/OneC_4139_Neurosan_api
+      endpoint: GHA-Digital Platform IT Build-sc-4139-IT Enterprise BOT
+    - repository: Reponame
+      type: githubenterprise
+      ref: master
+      name: Digital-Platform-IT-Build/4139-AKSDeploymentFiles
+      endpoint: GHA-Digital Platform IT Build-sc-4139-IT Enterprise BOT  
+stages:
+  - template: AKS Core Template/AKSStages.yml@templates
+    parameters:
+      TrackName: 4139-api-neurosanapi
+      TrackVariableName: 4139-NeurosanAPI
+      deployenvironmentname: DEVINT
+      checkoutreponame: Reponame
+      DCountenv: DEV
+      TemplateName: AKS-Deploy-Logic.yml
+      ValidationType: CAST
+      BuildContext: Neurosan/
+      ISKTLO: false
+      KTLOChildName: $(system.teamProject)
+      DockerFileName: Dockerfile
+      DockerFolderPath: $(Build.SourcesDirectory)/Neurosan/
+      FilePath: \\CTSINAZSIDOPBS1\DevopsFileShare\Digital-Platform-IT-Build\$(Build.SourceBranchName)\$(Build.DefinitionName)\$(Build.BuildNumber)\
+      YAMLFolderName: 4139-AKSDeploymentFiles
+      TrackType: API
+      deployenvironmentportfolio: BC
+      IsSVGRequired: True
+      AKSPipelineIdVariable: 1986

@@ -1,0 +1,10 @@
+flask[async]==3.1.1
+appdynamics==24.5.0.6849
+bleach==6.1.0
+redis==5.0.8
+azure-core==1.32.0
+azure-data-tables==12.6.0
+azure-identity==1.19.0
+python-dotenv==1.0.1
+loguru==0.7.2
+neuro-san==0.5.27

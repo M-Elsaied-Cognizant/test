@@ -1,0 +1,51 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "structured": {
+            "format": "{\"message\": \"%(message)s\", \"user_id\": \"%(user_id)s\", \"Timestamp\": \"%(iso_timestamp)s\", \"source\": \"%(source)s\", \"message_type\": \"%(message_type)s\", \"request_id\": \"%(request_id)s\", \"query_id\": \"%(query_id)s\"}"
+        },
+        "table_structured": {
+            "format": "{\"PartitionKey\": \"1CNEUROSANSERVER\", \"RowKey\": \"%(iso_timestamp)s\", \"AssociateId\": \"%(user_id)s\", \"ExceptionMessage\": \"%(message)s\", \"FileName\": \"%(filename)s\", \"FunctionName\": \"%(funcName)s\", \"LineNumber\": \"%(lineno)s\", \"Logtype\": \"%(levelname)s\", \"RecordName\": \"%(name)s\", \"request_id\": \"%(request_id)s\", \"query_id\": \"%(query_id)s\", \"source\": \"%(source)s\", \"message_type\": \"%(message_type)s\"}"
+        }
+    },
+    "filters": {
+        "inject_context": {
+            "()": "neuro_san.http_sidecar.logging.log_context_filter.LogContextFilter"
+        },
+        "exclude_logger": {
+            "()": "table_logger.handler.LogRecordFilter"
+        }
+    },
+    "handlers": {
+        "null": {
+            "class": "logging.NullHandler",
+            "level": "INFO"
+        },
+        "agent_console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "table_structured",
+            "filters": ["exclude_logger"],
+            "stream": "ext://sys.stdout"
+        },
+        "http_console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "table_structured",
+            "filters": ["inject_context"],
+            "stream": "ext://sys.stdout"
+        }
+    },
+    "loggers": {
+        "HttpServer": {
+            "level": "INFO",
+            "handlers": ["http_console"],
+            "propagate": false
+        }
+    },
+    "root": {
+        "level": "INFO",
+        "handlers": ["agent_console"]
+    }
+}

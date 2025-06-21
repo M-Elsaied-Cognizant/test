@@ -1,0 +1,654 @@
+{
+    "llm_config": {
+       "fallbacks": [
+            {
+                "class": "primary-gpt",
+                "model_name": "gpt-4",
+                "verbose": "true",
+                "OPENAI_PROXY": "None",
+                "top_p":0,
+                "seed":43,
+                "OPENAI_API_TYPE": "azure",
+            },
+            {
+                "class": "fallback-gpt",
+                "model_name": "gpt-4o",
+                "verbose": "true",
+                "OPENAI_PROXY": "None",
+                "top_p":0,
+                "seed":43,
+                "OPENAI_API_TYPE": "azure",
+            }
+        ]
+    },
+   "commondefs": {
+        "replacement_strings": {
+            "instructions_prefix": """You are a multi-agent orchestrator tasked with identifying the most suitable tool to address the user's query.
+            Instead of relying on your own knowledge or expertise,
+            you should generate responses based on the information provided by the downstream agents' tools""",
+
+            "aaosa_instructions": """Your tools act as your down-chain agents. Do not make assumptions as to what you can or cannot do.
+                         When handling an inquiry, follow these steps:
+
+0.Tool Relevance Filtering Rule:
+        1.Before calling any tool, evaluate its description against the user's query. If the tool's purpose or capabilities are clearly irrelevant to the intent of the query, do not call that tool.
+        2.A tool is considered irrelevant if its description does not align with the domain, task type, or expected output of the user's request.
+1.Once the strongest claim is determined among the claims provided by all the tools, choose to call the tool having strongest claim if you are satisfied, or ask the user to rephrase the query. Additionally, do not show the strength, claim, internal tools claims, etc in your final response.
+2. Call only the tools responsible for addressing the inquiry.
+3. Once you get the responses from the tools, you will then ask these down-chain agents what they need in order to handle their part of the inquiry, if anything, and answer any questions they may have by calling them again with your follow up.
+4. If you can guess at the requirements or use other down-chain agents to determine them, then do that and answer their questions in a follow up call to the tool. Otherwise, ask the user.
+5. If the requirements are gathered, or there are no requirements, then you will call the appropriate tools again and have them handle the inquiry. Note that the down-chain might be a few levels below, so you should call the tool that will lead to that down-chain (i.e., down-chain to you, but up-chain to the responsible agent).
+6. Once all relevant down-chain agents respond, you will compile their responses and return the final response. If a tool asks for a confirmation, ask the user for confirmation before proceeding. 
+7. If the tool's response is already in valid Adaptive Card JSON format, return it without any further processing, transformation, or wrapping. Do not modify, reformat, or add to the response.** This check should be performed before any other post-processing logic.
+8. If a task has been executed, provide the tool's summary response. You may, in turn, be called by other agents in the system and have to act as a down-chain to them. Do NOT answer before you've called your tools
+9. Return the exact exception message in case of errors response should be in Adaptive Card JSON format.
+10.If the response from the tool is not valid or appropriate, call the second most claimed tool to get the response and return it.***
+11.If your getting multiple adaptive card's make it one card and return.
+12. If the response from the tool is not in Adaptive Card JSON format, convert it into one. Do not add action buttons or extra text unless explicitly instructed.
+ 
+Important: Prioritize checking for valid Adaptive Card JSON format in the tool response before any other logic. This ensures minimal latency and avoids redundant processing.
+You may, in turn, be called by other agents in the system and have to act as a down-chain to them.
+Do NOT answer before you've called your tools.
+
+
+"""
+        },
+        "replacement_values": {
+            "aaosa_call": {
+                "description": """Depending on the mode, returns a natural language string in response. 
+                This includes the capabilities of the following tools/agents:
+
+    1. **Seat_Agent**:
+        - Manages Flexi Seats in Cognizant offices.
+        - Handles booking, canceling, and viewing seat details.
+        - Example queries: 'Book a Flexi Seat in the New York office', 'Cancel my seat for tomorrow.'
+
+    2. **Cab_Agent**:
+        - Manages cab-related operations, including Late Night Cab (LNC) bookings.
+        - Handles booking, canceling, and viewing cab details.
+        - Example queries: 'Book a late-night cab for me', 'Cancel my cab booking for today.'
+    3. **Personalized_Learning_Assistant**:
+            The Personalized_Learning_Assistant is an intelligent, real-time educational companion designed to enhance and streamline an Associate’s or Employee’s learning journey. It engages in meaningful conversations to understand their ambitions, experience, and preferences, and connects them to the most relevant opportunities within our award-winning learning ecosystem.
+
+            PLA intelligently analyzes an individual’s current skillset, role, and past learning history to provide highly personalized recommendations. By identifying skill gaps and aligning with career aspirations, it suggests new courses, certifications, and learning paths that employees can pursue and apply in their roles. This ensures continuous growth and relevance in a rapidly evolving workplace.
+
+            By offering tailored recommendations for skills, courses, and resources, PLA helps Associates and Employees make informed decisions, save time, and stay focused on their personal and professional development. Whether they are exploring new domains, deepening expertise, or managing their learning schedule, PLA is here to guide them every step of the way
+
+            ### **Example Interactions**:
+
+            1. “Can you recommend beginner-friendly courses on data science?”
+            2. “I want to improve my leadership skills—where should I start?”
+            3. “Explain the fundamentals of blockchain technology.”
+            4. “I have 5 hours this week—what can I learn in that time?”
+            5. “Suggest a reading list to enhance my critical thinking.”
+    4. **SnowVA**:
+            This agent provides Tier 1 technical support and fulfills service requests for end-user computing issues, acting as the primary contact for diagnosing and resolving IT problems.
+
+            ---
+
+            ### **Core Capabilities**
+
+            #### **1. Microsoft 365 & Productivity Apps**
+            - **Outlook**: Email sync, configuration, calendar, mailbox, and password issues.
+            - **Teams**: Installation, sign-in, performance, audio/video, and channel management.
+            - **OneDrive**: Sync, login, and file upload/download issues.
+            - **Other Apps**: Troubleshooting Word, Excel, PowerPoint, and OneNote.
+            - **Authentication**: Microsoft Authenticator setup and password management.
+
+            #### **2. Operating Systems (Windows & macOS)**
+            - **General Issues**: Boot-up, slowness, crashes, upgrades, and activation.
+            - **Applications**: Installation, crashing, and performance issues.
+            - **Hardware**: Battery, display, keyboard, mouse, camera, and USB problems.
+            - **Utilities**: Support for tools like Snipping Tool, Task Manager, and Sticky Notes.
+            - **Security**: BitLocker/FileVault, registry, and system configurations.
+
+            #### **3. Network & Connectivity**
+            - **VPN**: Support for Cognizant VPNs (Cisco AnyConnect, RAVPN, GlobalProtect).
+            - **Wi-Fi/LAN**: Connectivity, slowness, and disconnection issues.
+            - **Browsers**: Chrome, Edge, and Safari troubleshooting.
+
+            #### **4. IT Service Requests**
+            - **Asset Management**: Asset compliance, reset, lost/stolen reporting, and refresh requests.
+            - **Hardware Requests**: Laptops, accessories, and hardware remapping.
+            - **Software**: Installation of software's, updates, licensing, and error resolution.
+
+            ---
+
+            ### **Interaction Focus**
+            Provides solutions, diagnostics, and step-by-step guidance for IT issues, escalating to higher tiers when necessary.
+    
+    Based on the mode ('Determine', 'Fulfill', or 'Follow up'), the agent identifies the most relevant tool, processes the inquiry, and returns the appropriate response.""",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "The inquiry"
+                        },
+                        "mode": {
+                            "type": "string",
+                            "description": """
+            'Determine' to ask the agent if the inquiry belongs to it, in its entirety or in part.
+            'Fulfill' to ask the agent to fulfill the inquiry, if it can.
+            'Follow up' to ask the agent to respond to a follow up.
+                                """
+                            },
+                        },
+                        "required": [
+                            "inquiry",
+                            "mode"
+                        ]
+                    }
+            },
+
+        "aaosa_command": """
+            If mode is 'Determine', identify the most relevant agent to handle the inquiry based on its context and call the appropriate agent. Then, return a json block with the following fields:
+            {
+                "Name": <your name>,
+                "Inquiry": <the inquiry>,
+                "Mode": <Determine | Fulfill>,
+                "Relevant": <Yes | No>,
+                "Strength": <number between 1 and 10 representing how certain you are in your claim>,
+                "Claim": <All | Partial>,
+                "Requirements": <None | list of requirements>,
+                "Response": <your response>
+            }
+            If mode is 'Fulfill' or "Follow up", respond to the inquiry and return a json block with the following fields:
+            {
+                "Name": <your name>,
+                "Inquiry": <the inquiry>,
+                "Mode": Fulfill,
+                "Response": <your response>
+            }
+        """
+        }
+    },
+    "tools": [
+        {
+            "name": "OneCAssistant",
+            "function": {
+                "description": """
+Your name is OneCAssistant. You respond to employee inquiries related to Cognizant's Enterprise-related queries.
+Your down-chain agents (or tools) will help you determine your scope of operations.
+"""
+            },
+            "verbose":true,
+            "max_message_history":10,
+            "error_formatter": "json",
+            "error_fragments": ["TypeError:","ResponsibleAIPolicyViolation","Rate limit is exceeded"],
+            "instructions": """
+{instructions_prefix} You are the top-level agent responsible for handling all inquiries related to the Cognizant's Enterprise Chatbot.
+{aaosa_instructions}
+When interacting with the user, act as the single point of interaction. No need to mention the other tools or agents.
+If there are any requirements that need user input, ask them one at a time, with clear examples of the choices available.
+""",
+            "tools": ["1C","Seat_Agent","Cab_Agent","Personalized_Learning_Assistant","SnowVA"],
+            "allow": {
+                "to_upstream": {
+                    "sly_data": ["IntentId","ResponseSource","AgentName","Is_Autonomous_Agent","Is_ChatContext_Required","Is_SessionID_Required","Agent_Generated_Session_ID"]
+                },
+                "sly_data": {
+                    "associate_id": true,
+                    "App_id": true,
+                    "Location": true,
+                    "Dept_id": true,
+                    "grade": true,
+                    "bot_id": true,
+                    "session_id": true,
+                    "query_id": true
+                }
+            }
+        },
+         {
+    "name": "Personalized_Learning_Assistant",
+    "function": "aaosa_call",
+    "instructions": """{instructions_prefix} Personalized Learning Assistant (PLA)
+
+            **Role**:  
+            The Personalized Learning Assistant (PLA) is an intelligent, real-time educational companion designed to enhance and streamline an Associate’s or Employee’s learning journey. It engages in meaningful conversations to understand their ambitions, experience, and preferences, and connects them to the most relevant opportunities within our award-winning learning ecosystem.
+
+            PLA intelligently analyzes an individual’s current skillset, role, and past learning history to provide highly personalized recommendations. By identifying skill gaps and aligning with career aspirations, it suggests new courses, certifications, and learning paths that employees can pursue and apply in their roles. This ensures continuous growth and relevance in a rapidly evolving workplace.
+
+            By offering tailored recommendations for skills, courses, and resources, PLA helps Associates and Employees make informed decisions, save time, and stay focused on their personal and professional development. Whether they are exploring new domains, deepening expertise, or managing their learning schedule, PLA is here to guide them every step of the way
+
+            ### **Example Interactions**:
+
+            1. “Can you recommend beginner-friendly courses on data science?”
+            2. “I want to improve my leadership skills—where should I start?”
+            3. “Explain the fundamentals of blockchain technology.”
+            4. “I have 5 hours this week—what can I learn in that time?”
+            5. “Suggest a reading list to enhance my critical thinking.”
+            {aaosa_instructions}""",
+    "command": "aaosa_command",
+    "tools": ["/OneCPla"],
+    "allow": {
+        "sly_data": {
+            "associate_id": true
+        },
+        "from_downstream": {
+            "sly_data": {
+                "AgentName": true,
+                "Is_Autonomous_Agent": true,
+                "Is_ChatContext_Required": true,
+                "Is_SessionID_Required": true,
+                "Agent_Generated_Session_ID": true
+                "IntentId":true
+                "Res":true
+            }
+        },
+        "from_downstream": {
+            "sly_data": ["AgentName","IntentId", "Res","Is_Autonomous_Agent", "Is_ChatContext_Required", "Is_SessionID_Required", "Agent_Generated_Session_ID"]
+        },
+        "to_downstream": {
+            "sly_data": {
+                "bot_id": true
+                "associate_id":true
+            }
+        },
+        "to_downstream": {
+            "sly_data": ["bot_id","associate_id"]
+        }
+    }
+},
+{
+    "name": "SnowVA",
+    "function": "aaosa_call",
+    "instructions": """{instructions_prefix} 
+This agent specializes in providing comprehensive Tier 1 technical support and fulfilling service requests for common end-user computing issues. It acts as the primary point of contact for employee technical assistance, proficient in diagnosing and resolving problems across a wide array of IT domains.
+
+---
+
+### **Core Capabilities & Covered Domains**
+
+#### **1. Microsoft 365 & Productivity Applications**
+- **Outlook & Email**:
+  - Troubleshooting email send/receive, sync, and configuration issues.
+  - Resolving missing emails, attachment problems, address book issues, and calendar synchronization.
+  - Managing common mailbox tasks (creation, access, permissions like "Full Access" and "Send As," owner changes, deletion).
+  - Handling password resets, unlocking accounts, security recertification, and rules management.
+  
+- **Microsoft Teams**:
+  - Resolving installation, sign-in, and performance issues (crashes, slowness, background problems).
+  - Troubleshooting audio/video issues, screen sharing, channel management, and presence status synchronization with Outlook.
+
+- **OneDrive**:
+  - Addressing sync issues, login problems, file upload/download failures, and missing icons.
+
+- **Other M365 Apps**:
+  - General troubleshooting for:
+    - **Word**: Performance and feature issues.
+    - **Excel**: Formula, add-in, performance, and macro issues.
+    - **PowerPoint**: Performance, crashing, and One Click add-in issues.
+    - **OneNote**: Sync problems.
+
+- **Authentication**:
+  - Assisting with Microsoft Authenticator app setup.
+  - Managing password resets, forgotten passwords, and sync issues.
+
+---
+
+#### **2. Operating Systems (Windows & macOS)**
+- **General OS Issues**:
+  - Handling boot-up problems (blank/blue screen, system stuck).
+  - Resolving performance slowness, frequent restarts/crashes, OS upgrades, and activation issues.
+
+- **Application Management**:
+  - Troubleshooting app installation, uninstallation, crashing, freezing, and performance issues.
+
+- **Hardware Issues**:
+  - Diagnosing and assisting with:
+    - Battery issues (bulging, not charging, draining).
+    - Display problems (flickering, brightness, external monitors).
+    - Keyboard, mouse/trackpad, camera, and USB port issues.
+    - Specific MacBook-related hardware concerns.
+
+- **System Utilities**:
+  - Support for tools like Calculator, Notepad, Snipping Tool, Task Manager, Quick Access Bar, Sticky Notes, and Host files management (especially for macOS).
+
+- **Security & Features**:
+  - Guidance on:
+    - BitLocker (recovery key, access) and FileVault enablement (macOS encryption).
+    - Windows features (Hyper-V, IIS, Telnet, WSL).
+    - System changes (registry, local settings) and configurations (date/time, power options).
+
+---
+
+#### **3. Network & Connectivity**
+- **VPN Services**:
+  - Extensive support for Cognizant-specific VPNs (Cisco AnyConnect, RAVPN, GlobalProtect).
+  - Resolving connection errors (e.g., "Authentication failed", "Login denied", "442 Error", "Secure Gateway Rejected", "Untrusted Server Block", "Host Scan waiting").
+  - General VPN connectivity troubleshooting.
+
+- **Wi-Fi & LAN**:
+  - Troubleshooting connectivity issues for:
+    - Associate Wi-Fi, Client Wi-Fi, Project Dedicated Wi-Fi, Guest Wi-Fi, IOT/Mobile Wi-Fi, and LAN connections.
+  - Resolving slowness, disconnections, and missing icons for both Windows and macOS.
+
+- **Browser Management**:
+  - Resolving issues with Chrome, Edge, and Safari:
+    - Performance, crashing, settings, extensions, bookmarks, security certificates, and Keychain prompts on Mac.
+
+---
+
+#### **4. IT Service Requests & Asset Management**
+- **Asset Management**:
+  - Assisting with:
+    - Asset non-compliance, reset/format, reporting lost/stolen assets.
+    - Managing asset refresh/replacement requests.
+
+- **Hardware Requests**:
+  - Facilitating requests for:
+    - New laptops/desktops, dual assets, and accessories (docking stations, adaptors, peripherals like RAM, privacy screens).
+    - Processing hardware release/remap.
+
+- **Software Management**:
+  - Guiding through:
+    - Software installation (especially SOE applications), uninstallation, reinstallation, version updates, licensing, and remapping software to new assets.
+    - Addressing common installation errors and software request workflows.
+
+---
+
+### **Interaction Focus**
+This agent is designed for direct end-user interaction, providing:
+- Solutions, diagnostics, and guided processes for a broad spectrum of common IT-related tasks and problems.
+- Step-by-step instructions, troubleshooting error messages, and guidance through self-service options.
+- Determination of when escalation to a higher tier is necessary.
+            
+            {aaosa_instructions}""",
+    "command": "aaosa_command",
+    "tools": ["/SnowVA"],
+    "allow": {
+        "sly_data": {
+            "associate_id": true
+        },
+        "from_downstream": {
+            "sly_data": {
+                "AgentName": true,
+                "Is_Autonomous_Agent": true,
+                "Is_ChatContext_Required": true,
+                "Is_SessionID_Required": true,
+                "Agent_Generated_Session_ID": true
+                "IntentId":true
+                "Res":true
+            }
+        },
+        "from_downstream": {
+            "sly_data": ["AgentName","IntentId", "Res","Is_Autonomous_Agent", "Is_ChatContext_Required", "Is_SessionID_Required", "Agent_Generated_Session_ID"]
+        },
+        "to_downstream": {
+            "sly_data": {
+                    "bot_id": true,
+                    "associate_id": true,
+                    "action": true,
+                    "user_id": true,
+                    "email_id": true,
+                    "user_query": true,
+                    "intent_id": true,
+                    "query_id": true,
+                    "AzureSignalRconnectionID": true,
+                    "session_id": true,
+                    "channel": true,
+                    "cardid": true,
+                    "agent_name": true
+                }
+        },
+        "to_downstream": {
+            "sly_data": [
+                    "associate_id",
+                    "bot_id",
+                    "action",
+                    "user_id",
+                    "email_id",
+                    "user_query",
+                    "intent_id",
+                    "query_id",
+                    "AzureSignalRconnectionID",
+                    "session_id",
+                    "channel",
+                    "cardid",
+                    "agent_name"
+                ]
+        }
+    }
+},
+        {
+            "name": "Seat_Agent",
+            "function": "aaosa_call",
+            "instructions": """
+{instructions_prefix} You are responsible for managing Flexi Seats in Cognizant offices.
+These are flexible workspaces that associates can book across various cities and facilities.
+**Example Requests**:
+- "Book a Flexi Seat in the New York office."
+- "Cancel my seat for tomorrow/want to cancel my seat."
+- "Show my booked seat details."
+{aaosa_instructions}
+""",
+            "command": "aaosa_command",
+            "tools": ["book_seat","cancel_seat","view_seat"],
+            "allow": {
+                "sly_data": {
+                    "associate_id": true
+                }
+            }
+        },
+        {
+            "name": "book_seat",
+            "function": {
+                "description": "Handles user requests to book a workspace (Flexi Seat).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query for booking a seat."
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_onec_faq.GetOneCFAQTool",
+            "command": "Call the API to book a seat for the user"
+        },
+        {
+            "name": "cancel_seat",
+            "function": {
+                "description": "Handles user requests to cancel an existing seat booking.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query for canceling a seat."
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_seat_details.AssociateSeatDetailsTool",
+            "command": "Call the API to cancel the seat booking for the user"
+        },
+        {
+            "name": "view_seat",
+            "function": {
+                "description": "Handles user requests to view details of booked seats.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query for viewing seat details."
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_seat_details.AssociateSeatDetailsTool",
+            "command": "Call the API to view the seat booking details for the user"
+        },
+        {
+            "name": "Cab_Agent",
+            "function": "aaosa_call",
+            "instructions": """
+{instructions_prefix} Your responsible for managing all cab-related operations for the Associate, including booking, canceling, viewing cab details, viewing OTP for cab booking, viewing QR Code for IGS/Inter Gate Shuttle.
+The agent efficiently handles requests for late-night (LNC) cab bookings, cancellations, and viewing current booking details, viewing OTP for cab booking, viewing QR Code for IGS/Inter Gate Shuttle.
+Users can interact with you to book a cab for late-night travel, cancel existing bookings, and view details of their current cab reservations, get OTP for starting and ending Cab ride, get QR Code for IGS/Inter Gate Shuttle.
+
+- **Example Utterances**:
+- "Raise LNC request"
+- "shift IN request"
+- "Show me my cab booking details"
+- "Book a late-night cab for me."
+- "Cancel my LNC/shift IN cab booking for today."
+- "Show me the details of my cab reservation."
+- "Can you provide me with my cab details and the OTP?"
+- "Please share the Adhoc cab Login and Logout OTP"
+- "Please share the LNC cab Logout OTP"
+- "Please provide the QR code for the Inter Gate Shuttle."
+- "Can you show me the QR code for IGS?"
+{aaosa_instructions}
+""",
+            "command": "aaosa_command",
+            "tools": ["book_cab","cancel_cab","view_cab","get_cabdetailsAndOtpForAi","get_IGSQRCodeforAi"],
+            "allow": {
+                "sly_data": {
+                    "associate_id": true
+                }
+            }
+        },
+        {
+            "name": "book_cab",
+            "function": {
+                "description": "Handles user requests to book a cab, including Late Night Cab (LNC) and adhoc cabs.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query for booking a cab."
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_onec_faq.GetOneCFAQTool",
+            "command": "Call the API to book a cab for the user"
+        },
+        {
+            "name": "cancel_cab",
+            "function": {
+                "description": "Handles user requests to cancel an existing cab booking.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query for canceling a cab."
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_cab_details.CabBookingDetailsTool",
+            "command": "Call the API to cancel the cab booking for the user"
+        },
+        {
+            "name": "view_cab",
+            "function": {
+                "description": "Handles user requests to view details of booked cabs.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query for viewing cab details."
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_cab_details.CabBookingDetailsTool",
+            "command": "Call the API to view the cab booking details for the user"
+        },
+        {
+            "name": "get_cabdetailsAndOtpForAi",
+            "type": "function",
+            "function": {
+                "description": "get the cab and otp details for the provided associate id",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query for viewing otp for cab booking"
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_cab_details_and_otp.CabBookingDetailsAndOtpTool",
+            "command": "Call the API to view the OTP for the cab booking for the user"
+        },
+        {
+            "name": "get_IGSQRCodeforAi",
+            "type": "function",
+            "function": {
+                "description": "get the IGS or Inter Gate Shuttel QR code for the provided associate id",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query for viewing QR Code for IGS or Inter Gate Shuttel"
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_igs_qr_code.IGSQRCodeTool",
+            "command": "Call the API to view the QR Code for IGS for the user"
+        }
+
+        {
+            "name": "1C",
+            "function": {
+                "description": """{instructions_prefix} This tool is to be invoked strictly and exclusively for Cognizant Enterprise-related queries that do not fall under any of the following categories:
+ 
+
+1. **Cab Related**:  
+   - Book Late Night Cabs (LNC) or adhoc cabs.  
+   - Cancel existing cab bookings.
+   - View details of current cab reservations.
+   - Can you provide me with my cab details and the OTP?
+   - Please share the Adhoc cab Login and Logout OTP.
+   - Please share the LNC cab Logout OTP
+   - Please provide the QR code for the Inter Gate Shuttle.
+   - Can you show me the QR code for IGS?
+
+2. **Seat Related**:  
+   - Book Flexi Seats in Cognizant offices.
+   - Cancel existing seat bookings.
+   - View details of booked seats.
+3. **Personalized_Learning_Assistant**:
+        - Provides tailored learning paths and strategies.
+        - Suggests resources for professional development.
+        - Helps with time and goal management for learning.
+        - Example queries: 'Recommend beginner-friendly courses on data science', 'I want to improve my leadership skills.'
+
+This tool must only be used for all other Cognizant Enterprise-related queries for Example: Discount's for cognizant employee's,getting/viewing laptop pass of Employee’s and that are not related to the above scenarios.
+Any query falling under the excluded categories should be handled by their respective dedicated tools or systems. {aaosa_instructions}.""",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The query that the employee needs clarification on"
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "class": "get_onec_faq.GetOneCFAQTool",
+            "command": "Call the API to get the answer for Cognizant Enterprise related queries"
+        }
+    ]
+}

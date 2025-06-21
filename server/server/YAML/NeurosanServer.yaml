@@ -1,0 +1,84 @@
+parameters:
+  - name: deployenvironmentname
+    default: DEVINT
+  - name: DCountenv
+    default: DEV
+  - name: BuildContext
+    default: Guest
+  - name: DockerFileName
+    default: Guest
+  - name: checkoutreponame
+    default: Reponame
+  - name: ValidationType
+    default: CAST
+  - name: DockerFilePath
+    default: Guest
+  - name: DockerFolderPath
+    default: Guest
+  - name: deployenvironmentportfolio
+    default: BC
+variables:
+- group: AKSDeployment-SVG
+- group: 4139-AKSDeploymentFiles-VG
+- group: AKSDeployment-DR-SVG 
+- name: envname
+  value: DEV
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release') }}:
+  - name: envname
+    value: SIT
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/develop') }}:
+  - name: envname
+    value: DEV
+- name: devKeyVaultSecret
+  value: '--from-literal=OPENAI-API-KEY="$(DEV-4139-API-NeurosanServer-OPENAI-API-KEY)" --from-literal=CAB-CLIENT-SECRET="$(DEV-4139-API-NeurosanServer-CAB-CLIENT-SECRET)" --from-literal=FLEXISEAT-CLIENT-SECRET="$(DEV-4139-API-NeurosanServer-FLEXISEAT-CLIENT-SECRET)" --from-literal=REDIS-PASSWORD="$(DEV-4139-API-NeurosanServer-REDIS-PASSWORD)" --from-literal=PLA-CLIENT-SECRET="$(DEV-4139-API-NeurosanServer-PLA-CLIENT-SECRET)" --from-literal=Transaction-Portfolio-CSIT-ClientId="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientId)" --from-literal=Transaction-Portfolio-CSIT-ClientSecret="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITOperations-ClientId="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientId)" --from-literal=Transaction-Portfolio-ITOperations-ClientSecret="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientSecret)" --from-literal=Transaction-Portfolio-FinOps-ClientId="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientId)" --from-literal=Transaction-Portfolio-FinOps-ClientSecret="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientSecret)" --from-literal=Transaction-Portfolio-Fulfilment-ClientId="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientId)" --from-literal=Transaction-Portfolio-Fulfilment-ClientSecret="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientSecret)" --from-literal=Transaction-Portfolio-HR-ClientId="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientId)" --from-literal=Transaction-Portfolio-HR-ClientSecret="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientSecret)" --from-literal=Transaction-Portfolio-DEIT-ClientId="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientId)" --from-literal=Transaction-Portfolio-DEIT-ClientSecret="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITDA-ClientId="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientId)" --from-literal=Transaction-Portfolio-ITDA-ClientSecret="$(DEV-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientSecret)"'
+- name: sitKeyVaultSecret
+  value: '--from-literal=OPENAI-API-KEY="$(SIT-4139-API-NeurosanServer-OPENAI-API-KEY)" --from-literal=CAB-CLIENT-SECRET="$(SIT-4139-API-NeurosanServer-CAB-CLIENT-SECRET)" --from-literal=FLEXISEAT-CLIENT-SECRET="$(SIT-4139-API-NeurosanServer-FLEXISEAT-CLIENT-SECRET)" --from-literal=REDIS-PASSWORD="$(SIT-4139-API-NeurosanServer-REDIS-PASSWORD)" --from-literal=PLA-CLIENT-SECRET="$(SIT-4139-API-NeurosanServer-PLA-CLIENT-SECRET)" --from-literal=Transaction-Portfolio-CSIT-ClientId="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientId)" --from-literal=Transaction-Portfolio-CSIT-ClientSecret="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITOperations-ClientId="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientId)" --from-literal=Transaction-Portfolio-ITOperations-ClientSecret="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientSecret)" --from-literal=Transaction-Portfolio-FinOps-ClientId="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientId)" --from-literal=Transaction-Portfolio-FinOps-ClientSecret="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientSecret)" --from-literal=Transaction-Portfolio-Fulfilment-ClientId="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientId)" --from-literal=Transaction-Portfolio-Fulfilment-ClientSecret="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientSecret)" --from-literal=Transaction-Portfolio-HR-ClientId="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientId)" --from-literal=Transaction-Portfolio-HR-ClientSecret="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientSecret)" --from-literal=Transaction-Portfolio-DEIT-ClientId="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientId)" --from-literal=Transaction-Portfolio-DEIT-ClientSecret="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITDA-ClientId="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientId)" --from-literal=Transaction-Portfolio-ITDA-ClientSecret="$(SIT-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientSecret)"'
+- name: ptKeyVaultSecret
+  value: '--from-literal=OPENAI-API-KEY="$(PT-4139-API-NeurosanServer-OPENAI-API-KEY)" --from-literal=CAB-CLIENT-SECRET="$(PT-4139-API-NeurosanServer-CAB-CLIENT-SECRET)" --from-literal=FLEXISEAT-CLIENT-SECRET="$(PT-4139-API-NeurosanServer-FLEXISEAT-CLIENT-SECRET)" --from-literal=REDIS-PASSWORD="$(PT-4139-API-NeurosanServer-REDIS-PASSWORD)" --from-literal=PLA-CLIENT-SECRET="$(PT-4139-API-NeurosanServer-PLA-CLIENT-SECRET)" --from-literal=Transaction-Portfolio-CSIT-ClientId="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientId)" --from-literal=Transaction-Portfolio-CSIT-ClientSecret="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITOperations-ClientId="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientId)" --from-literal=Transaction-Portfolio-ITOperations-ClientSecret="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientSecret)" --from-literal=Transaction-Portfolio-FinOps-ClientId="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientId)" --from-literal=Transaction-Portfolio-FinOps-ClientSecret="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientSecret)" --from-literal=Transaction-Portfolio-Fulfilment-ClientId="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientId)" --from-literal=Transaction-Portfolio-Fulfilment-ClientSecret="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientSecret)" --from-literal=Transaction-Portfolio-HR-ClientId="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientId)" --from-literal=Transaction-Portfolio-HR-ClientSecret="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientSecret)" --from-literal=Transaction-Portfolio-DEIT-ClientId="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientId)" --from-literal=Transaction-Portfolio-DEIT-ClientSecret="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITDA-ClientId="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientId)" --from-literal=Transaction-Portfolio-ITDA-ClientSecret="$(PT-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientSecret)"'
+- name: uatKeyVaultSecret
+  value: '--from-literal=OPENAI-API-KEY="$(UAT-4139-API-NeurosanServer-OPENAI-API-KEY)" --from-literal=CAB-CLIENT-SECRET="$(UAT-4139-API-NeurosanServer-CAB-CLIENT-SECRET)" --from-literal=FLEXISEAT-CLIENT-SECRET="$(UAT-4139-API-NeurosanServer-FLEXISEAT-CLIENT-SECRET)" --from-literal=REDIS-PASSWORD="$(UAT-4139-API-NeurosanServer-REDIS-PASSWORD)" --from-literal=PLA-CLIENT-SECRET="$(UAT-4139-API-NeurosanServer-PLA-CLIENT-SECRET)" --from-literal=Transaction-Portfolio-CSIT-ClientId="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientId)" --from-literal=Transaction-Portfolio-CSIT-ClientSecret="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITOperations-ClientId="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientId)" --from-literal=Transaction-Portfolio-ITOperations-ClientSecret="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientSecret)" --from-literal=Transaction-Portfolio-FinOps-ClientId="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientId)" --from-literal=Transaction-Portfolio-FinOps-ClientSecret="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientSecret)" --from-literal=Transaction-Portfolio-Fulfilment-ClientId="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientId)" --from-literal=Transaction-Portfolio-Fulfilment-ClientSecret="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientSecret)" --from-literal=Transaction-Portfolio-HR-ClientId="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientId)" --from-literal=Transaction-Portfolio-HR-ClientSecret="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientSecret)" --from-literal=Transaction-Portfolio-DEIT-ClientId="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientId)" --from-literal=Transaction-Portfolio-DEIT-ClientSecret="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITDA-ClientId="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientId)" --from-literal=Transaction-Portfolio-ITDA-ClientSecret="$(UAT-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientSecret)"'
+- name: prodKeyVaultSecret
+  value: '--from-literal=OPENAI-API-KEY="$(PROD-4139-API-NeurosanServer-OPENAI-API-KEY)" --from-literal=CAB-CLIENT-SECRET="$(PROD-4139-API-NeurosanServer-CAB-CLIENT-SECRET)" --from-literal=FLEXISEAT-CLIENT-SECRET="$(PROD-4139-API-NeurosanServer-FLEXISEAT-CLIENT-SECRET)" --from-literal=REDIS-PASSWORD="$(PROD-4139-API-NeurosanServer-REDIS-PASSWORD)" --from-literal=PLA-CLIENT-SECRET="$(PROD-4139-API-NeurosanServer-PLA-CLIENT-SECRET)" --from-literal=Transaction-Portfolio-CSIT-ClientId="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientId)" --from-literal=Transaction-Portfolio-CSIT-ClientSecret="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITOperations-ClientId="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientId)" --from-literal=Transaction-Portfolio-ITOperations-ClientSecret="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientSecret)" --from-literal=Transaction-Portfolio-FinOps-ClientId="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientId)" --from-literal=Transaction-Portfolio-FinOps-ClientSecret="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientSecret)" --from-literal=Transaction-Portfolio-Fulfilment-ClientId="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientId)" --from-literal=Transaction-Portfolio-Fulfilment-ClientSecret="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientSecret)" --from-literal=Transaction-Portfolio-HR-ClientId="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientId)" --from-literal=Transaction-Portfolio-HR-ClientSecret="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientSecret)" --from-literal=Transaction-Portfolio-DEIT-ClientId="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientId)" --from-literal=Transaction-Portfolio-DEIT-ClientSecret="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITDA-ClientId="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientId)" --from-literal=Transaction-Portfolio-ITDA-ClientSecret="$(PROD-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientSecret)"'
+- name: drKeyVaultSecret
+  value: '--from-literal=OPENAI-API-KEY="$(DR-4139-API-NeurosanServer-OPENAI-API-KEY)" --from-literal=CAB-CLIENT-SECRET="$(DR-4139-API-NeurosanServer-CAB-CLIENT-SECRET)" --from-literal=FLEXISEAT-CLIENT-SECRET="$(DR-4139-API-NeurosanServer-FLEXISEAT-CLIENT-SECRET)" --from-literal=REDIS-PASSWORD="$(DR-4139-API-NeurosanServer-REDIS-PASSWORD)" --from-literal=PLA-CLIENT-SECRET="$(DR-4139-API-NeurosanServer-PLA-CLIENT-SECRET)" --from-literal=Transaction-Portfolio-CSIT-ClientId="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientId)" --from-literal=Transaction-Portfolio-CSIT-ClientSecret="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-CSIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITOperations-ClientId="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientId)" --from-literal=Transaction-Portfolio-ITOperations-ClientSecret="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-ITOperations-ClientSecret)" --from-literal=Transaction-Portfolio-FinOps-ClientId="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientId)" --from-literal=Transaction-Portfolio-FinOps-ClientSecret="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-FinOps-ClientSecret)" --from-literal=Transaction-Portfolio-Fulfilment-ClientId="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientId)" --from-literal=Transaction-Portfolio-Fulfilment-ClientSecret="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-Fulfilment-ClientSecret)" --from-literal=Transaction-Portfolio-HR-ClientId="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientId)" --from-literal=Transaction-Portfolio-HR-ClientSecret="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-HR-ClientSecret)" --from-literal=Transaction-Portfolio-DEIT-ClientId="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientId)" --from-literal=Transaction-Portfolio-DEIT-ClientSecret="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-DEIT-ClientSecret)" --from-literal=Transaction-Portfolio-ITDA-ClientId="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientId)" --from-literal=Transaction-Portfolio-ITDA-ClientSecret="$(DR-4139-API-NeurosanServer-Transaction-Portfolio-ITDA-ClientSecret)"'
+pr: none
+name: $(envname)-$(date:yyyyMMdd)$(rev:.r)
+resources:
+  repositories:
+    - repository: templates
+      type: githubenterprise
+      name: Digital-Platform-IT-Build/OneC_2932_CoreTemplate
+      endpoint: GHA-Digital Platform IT Build-sc-4139-IT Enterprise BOT
+    - repository: Reponame
+      type: githubenterprise
+      ref: $(Build.SourceBranchName)
+      name: Digital-Platform-IT-Build/OneC_4139_Neurosan_Server
+      endpoint: GHA-Digital Platform IT Build-sc-4139-IT Enterprise BOT
+    - repository: Reponame
+      type: githubenterprise
+      ref: master
+      name: Digital-Platform-IT-Build/4139-AKSDeploymentFiles
+      endpoint: GHA-Digital Platform IT Build-sc-4139-IT Enterprise BOT  
+stages:
+  - template: AKS Core Template/AKSStages.yml@templates
+    parameters:
+      TrackName: 4139-api-neurosanserver
+      TrackVariableName: 4139-NeurosanServer 
+      deployenvironmentname: DEVINT
+      checkoutreponame: Reponame
+      DCountenv: DEV
+      TemplateName: AKS-Deploy-Logic.yml
+      ValidationType: CAST
+      BuildContext: neuro-san
+      ISKTLO: false
+      KTLOChildName: $(system.teamProject)
+      DockerFileName: Dockerfile
+      DockerFolderPath: $(Build.SourcesDirectory)/neuro-san/
+      FilePath: \\CTSINAZSIDOPBS1\DevopsFileShare\Digital-Platform-IT-Build\$(Build.SourceBranchName)\$(Build.DefinitionName)\$(Build.BuildNumber)\
+      YAMLFolderName: 4139-AKSDeploymentFiles
+      TrackType: API
+      deployenvironmentportfolio: BC
+      IsSVGRequired: True
+      AKSPipelineIdVariable: 1986
+      DASTScanWebSites: 6300f60f-bc6f-4021-b6f2-b1f602f92447
+      DASTScanWebSitesProfile: e27fc9be-1861-4a03-6d39-b20d038cef40
